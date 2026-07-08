@@ -36,6 +36,7 @@ trait TranslatableTrait
     protected array $translationsCache = [];
     protected ?string $currentLocale = null;
     protected ?string $fallbackLocale = null;
+    protected bool $autoCreateTranslations = true;
 
     /**
      * @codeCoverageIgnore
@@ -76,9 +77,42 @@ trait TranslatableTrait
         $translation = $this->createTranslation();
         $translation->setLocale($locale);
 
+        if (!$this->autoCreateTranslations) {
+            return $translation;
+        }
+
         $this->addTranslation($translation);
 
         $this->translationsCache[$locale] = $translation;
+
+        return $translation;
+    }
+
+    /**
+     * @psalm-return T
+     *
+     * @throws \RuntimeException
+     */
+    public function getOrCreateTranslation(?string $locale = null): TranslationInterface
+    {
+        if ($this instanceof Proxy && !$this->__isInitialized()) {
+            $this->__load();
+        }
+
+        $locale = $locale ?: $this->currentLocale;
+        if (null === $locale) {
+            throw new \RuntimeException('No locale has been set and current locale is undefined.');
+        }
+
+        $translation = $this->matchTranslation($locale);
+        if (null !== $translation) {
+            return $translation;
+        }
+
+        $translation = $this->createTranslation();
+        $translation->setLocale($locale);
+
+        $this->addTranslation($translation);
 
         return $translation;
     }
@@ -184,6 +218,11 @@ trait TranslatableTrait
     public function setFallbackLocale(?string $fallbackLocale): void
     {
         $this->fallbackLocale = $fallbackLocale;
+    }
+
+    public function setAutoCreateTranslations(bool $autoCreateTranslations): void
+    {
+        $this->autoCreateTranslations = $autoCreateTranslations;
     }
 
     /**

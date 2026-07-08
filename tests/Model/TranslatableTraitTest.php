@@ -105,6 +105,99 @@ class TranslatableTraitTest extends TestCase
     }
 
     /**
+     * @test getTranslation
+     */
+    public function testGetTranslationWithAutoCreateDisabledReturnsDetachedTranslation(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+        $dummyTranslatable->setAutoCreateTranslations(false);
+
+        $translation = $dummyTranslatable->getTranslation('fr');
+
+        $this->assertSame('fr', $translation->getLocale());
+        $this->assertNull($translation->getTranslatable());
+        $this->assertCount(0, $dummyTranslatable->getTranslations());
+        $this->assertNotSame($translation, $dummyTranslatable->getTranslation('fr'), 'A detached translation must not be cached.');
+    }
+
+    /**
+     * @test getTranslation
+     */
+    public function testGetTranslationWithAutoCreateDisabledStillReturnsExistingAndFallbackTranslations(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+        $dummyTranslatable->setAutoCreateTranslations(false);
+        $this->setTranslation('en', 'english', $dummyTranslatable);
+
+        $this->assertSame('english', $dummyTranslatable->getTranslation('en')->getTranslation());
+        $this->assertSame('english', $dummyTranslatable->getTranslation('it')->getTranslation());
+    }
+
+    /**
+     * @test getOrCreateTranslation
+     */
+    public function testGetOrCreateTranslationAttachesEvenWithAutoCreateDisabled(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+        $dummyTranslatable->setAutoCreateTranslations(false);
+
+        $translation = $dummyTranslatable->getOrCreateTranslation('fr');
+
+        $this->assertSame('fr', $translation->getLocale());
+        $this->assertSame($dummyTranslatable, $translation->getTranslatable());
+        $this->assertCount(1, $dummyTranslatable->getTranslations());
+        $this->assertSame($translation, $dummyTranslatable->getOrCreateTranslation('fr'));
+    }
+
+    /**
+     * @test getOrCreateTranslation
+     */
+    public function testGetOrCreateTranslationReturnsExistingTranslation(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+        $english = $this->setTranslation('en', 'english', $dummyTranslatable);
+        $dummyTranslatable->addTranslation($english);
+
+        $this->assertSame($english, $dummyTranslatable->getOrCreateTranslation('en'));
+    }
+
+    /**
+     * @test getOrCreateTranslation
+     */
+    public function testGetOrCreateTranslationDoesNotFallBackToAnotherLocale(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+        $dummyTranslatable->addTranslation($this->setTranslation('en', 'english', $dummyTranslatable));
+
+        $translation = $dummyTranslatable->getOrCreateTranslation('it');
+
+        $this->assertSame('it', $translation->getLocale());
+        $this->assertNull($translation->getTranslation());
+        $this->assertCount(2, $dummyTranslatable->getTranslations());
+    }
+
+    /**
+     * @test getOrCreateTranslation
+     */
+    public function testGetOrCreateTranslationUsesCurrentLocaleByDefault(): void
+    {
+        $dummyTranslatable = $this->setTranslatable('es', 'en');
+
+        $this->assertSame('es', $dummyTranslatable->getOrCreateTranslation()->getLocale());
+    }
+
+    /**
+     * @test getOrCreateTranslation
+     */
+    public function testGetOrCreateTranslationWithoutLocales(): void
+    {
+        $dummyTranslatable = $this->setTranslatable(null, null);
+
+        $this->expectException(\RuntimeException::class);
+        $dummyTranslatable->getOrCreateTranslation();
+    }
+
+    /**
      * @test hasTranslation
      */
     public function testHasTranslation(): void

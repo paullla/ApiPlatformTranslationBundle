@@ -26,6 +26,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('locastic_api_platform_translation.translation.translator'),
             param('locastic_api_platform_translation.fallback_locale'),
+            param('locastic_api_platform_translation.auto_create_translations'),
         ])
         ->tag('doctrine.event_listener', ['event' => 'postLoad'])
         ->tag('doctrine.event_listener', ['event' => 'prePersist']);

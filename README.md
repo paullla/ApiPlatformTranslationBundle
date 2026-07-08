@@ -46,6 +46,15 @@ api_platform_translation:
     # null (the default) inherits framework.default_locale.
     fallback_locale: null
 
+    # true (the legacy behavior): reading a translation that does not exist
+    # creates an empty one and attaches it to the entity, and with the
+    # documented cascade persist mapping a plain read can then insert empty
+    # rows into the database. false: reads never write, a missing translation
+    # just shows empty fields. Setters work either way, they write through
+    # getOrCreateTranslation() (see below). The default flips to false in
+    # 3.0; leaving the option unset is deprecated since 2.1.
+    auto_create_translations: true
+
     # Ordered sources the request locale is resolved from; the first source
     # producing a locale wins. Remove a source to disable it.
     locale_resolution:
@@ -68,7 +77,7 @@ Implementation:
 - Extend your resource with `Locastic\ApiPlatformTranslationBundle\Model\AbstractTranslatable`
 - Add a `createTranslation()` method which returns a new object of the translation entity
 - Add a `translations` property: a `OneToMany` to the translation entity, indexed by locale, with the `translations` serialization group
-- Add virtual fields for all translatable fields; their getters and setters delegate to the translation object
+- Add virtual fields for all translatable fields; getters delegate to `getTranslation()` (current locale, with fallback), setters to `getOrCreateTranslation()` (exact locale, created and attached when missing)
 
 Example:
 ```php
@@ -133,7 +142,7 @@ class Article extends AbstractTranslatable
 
     public function setTitle(string $title): void
     {
-        $this->getTranslation()->setTitle($title);
+        $this->getOrCreateTranslation()->setTitle($title);
     }
 
     protected function createTranslation(): TranslationInterface

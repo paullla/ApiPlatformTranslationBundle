@@ -14,6 +14,7 @@ class AssignLocaleListener
     public function __construct(
         private Translator $translator,
         private string $defaultLocale = 'en',
+        private bool $autoCreateTranslations = true,
     ) {
     }
 
@@ -47,5 +48,10 @@ class AssignLocaleListener
         $localeCode = $this->translator->loadCurrentLocale();
         $object->setCurrentLocale($localeCode);
         $object->setFallbackLocale($this->defaultLocale);
+
+        // Not on TranslatableInterface: adding a method there would break implementors not using the trait.
+        if (method_exists($object, 'setAutoCreateTranslations')) {
+            $object->setAutoCreateTranslations($this->autoCreateTranslations);
+        }
     }
 }

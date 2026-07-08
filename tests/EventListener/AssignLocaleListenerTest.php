@@ -75,6 +75,40 @@ class AssignLocaleListenerTest extends TestCase
         $assignLocaleSubscriber->postLoad($args);
     }
 
+    /**
+     * @test postLoad
+     */
+    public function testPostLoadStampsAutoCreateTranslations(): void
+    {
+        $translatable = new DummyTranslatable();
+        $args = $this->createMock(LifecycleEventArgs::class);
+        $this->getObjectInfo($args, $translatable);
+        $this->loadCurrentLocale();
+
+        $assignLocaleSubscriber = new AssignLocaleListener($this->translator, 'en', false);
+        $assignLocaleSubscriber->postLoad($args);
+
+        $translatable->getTranslation('fr');
+        $this->assertCount(0, $translatable->getTranslations(), 'With auto-create disabled, reading a missing locale must not attach a translation.');
+    }
+
+    /**
+     * @test postLoad
+     */
+    public function testPostLoadKeepsAutoCreateTranslationsByDefault(): void
+    {
+        $translatable = new DummyTranslatable();
+        $args = $this->createMock(LifecycleEventArgs::class);
+        $this->getObjectInfo($args, $translatable);
+        $this->loadCurrentLocale();
+
+        $assignLocaleSubscriber = new AssignLocaleListener($this->translator);
+        $assignLocaleSubscriber->postLoad($args);
+
+        $translatable->getTranslation('fr');
+        $this->assertCount(1, $translatable->getTranslations());
+    }
+
     private function getObjectInfo(\PHPUnit\Framework\MockObject\MockObject $args, object $object): void
     {
         $args

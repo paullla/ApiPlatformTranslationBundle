@@ -13,6 +13,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `locale_resolution` (ordered locale sources, `query_param` and
   `accept_language`; each can be removed or reordered) (#85)
 - FQCN alias for the `Translator` service, so it can be autowired by type (#85)
+- `auto_create_translations` option: set to `false` to stop `getTranslation()`
+  from creating and attaching a translation for a missing locale (which, with
+  `cascade: persist`, lets a read insert empty rows); it returns a detached,
+  never-persisted translation instead (#55, #34)
+- `getOrCreateTranslation()` on `TranslatableTrait`: the explicit write target
+  for virtual setters; creates and attaches the missing translation for the
+  exact locale, without locale fallback, regardless of
+  `auto_create_translations`
 
 ### Changed
 - Modern bundle layout: the bundle class extends `AbstractBundle` and services
@@ -28,6 +36,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Deprecated
 - `ApiPlatformTranslationExtension`, to be removed in 3.0; the bundle registers
   its extension itself through `AbstractBundle` (#85)
+- Not setting `auto_create_translations` explicitly; its default (`true`)
+  flips to `false` in 3.0 (see UPGRADE-2.1.md)
 
 ## [2.0.1] - 2026-07-07
 
