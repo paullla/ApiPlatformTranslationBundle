@@ -19,7 +19,8 @@
     "rules": [
         "A translatable resource extends AbstractTranslatable, implements createTranslation(), and maps translations as OneToMany with indexBy: 'locale', cascade: ['persist'], orphanRemoval: true.",
         "The translation entity extends AbstractTranslation and holds all translatable fields plus a writable locale field.",
-        "Virtual getters and setters on the translatable delegate to getTranslation(), which resolves the current locale and falls back to the fallback locale.",
+        "Virtual getters on the translatable delegate to getTranslation(), which resolves the current locale and falls back to the fallback locale; virtual setters delegate to getOrCreateTranslation(), which targets the exact locale and creates the translation when missing.",
+        "Set auto_create_translations: false so reads never write to the database; the default (true) keeps the legacy behavior where getTranslation() attaches an empty translation for a missing locale, which cascade persist can insert on the next flush. The default flips to false in 3.0.",
         "Put the 'translations' serialization group on the translations collection, on every field of the translation entity, and in the normalizationContext of POST, PUT, and PATCH operations so writes return all translation objects.",
         "In write payloads, translations is an object keyed by locale, and each entry must repeat its 'locale' field: {\"translations\": {\"de\": {\"title\": \"...\", \"locale\": \"de\"}}}.",
         "Prefer PATCH (application/merge-patch+json) for editing translations: it updates only the submitted locales. PUT is a full replace and removes locales absent from the payload.",
